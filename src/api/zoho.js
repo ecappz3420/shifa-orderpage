@@ -48,12 +48,12 @@ export async function postRecord(formName, formData) {
         }
         const response = await ZOHO.CREATOR.API.addRecord(config);
         if(response.code !== 3000){
-           console.log("Error Fetching Records");
+           console.log("Error Adding Records");
            return {};
         }
         return response.data;
        } catch (error) {
            console.log(error);
-           return {};
+           return null;
        }
 }
