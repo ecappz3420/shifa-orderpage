@@ -1,9 +1,17 @@
 import { Button, Form, Input, InputNumber } from "antd";
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { postRecord } from "../api/zoho";
 
 const Customer = ({ handleClose, addNewCustomer }) => {
   const [form] = Form.useForm();
+  const customerNameFieldRef = useRef(null);
+
+  useEffect(() => {
+    // Focus the input after the component is mounted
+    if (customerNameFieldRef.current) {
+      customerNameFieldRef.current.focus();
+    }
+  }, []);
 
   const onSubmit = async (data) => {
     try {
@@ -36,7 +44,7 @@ const Customer = ({ handleClose, addNewCustomer }) => {
           className="w-[300px]"
           rules={[{ required: true, message: "Please enter a customer name" }]}
         >
-          <Input />
+          <Input ref={customerNameFieldRef} />
         </Form.Item>
         <Form.Item
           label="Phone"
