@@ -32,7 +32,6 @@ const App = () => {
 
   const addLineItemBtnRef = useRef(null);
   const customerNameFieldRef = useRef(null);
-  const salesExecutiveFieldRef = useRef(null);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -76,7 +75,6 @@ const App = () => {
 
   const handleClose = () => {
     setOpenCustomer(false);
-    salesExecutiveFieldRef?.current.focus();
   };
   const addNewCustomer = (data) => {
     setCustomers((prev) => [...prev, data]);
@@ -289,12 +287,7 @@ const App = () => {
               { required: true, message: "Please select a sales executive" },
             ]}
           >
-            <Select
-              options={salesExecutives}
-              allowClear
-              showSearch
-              ref={salesExecutiveFieldRef}
-            />
+            <Select options={salesExecutives} allowClear showSearch />
           </Form.Item>
           <Form.Item
             layout="horizontal"
