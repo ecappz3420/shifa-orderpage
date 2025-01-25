@@ -81,7 +81,7 @@ const App = () => {
           id: record.ID,
         }));
         setCustomers(customer_data);
-        const salesResp = await getRecords("All_Employees", "ID != 0");
+        const salesResp = await getRecords("All_Users", "ID != 0");
         const sales_data = salesResp.map((record) => ({
           label: record.Name.display_value,
           value: record.Name.display_value,
