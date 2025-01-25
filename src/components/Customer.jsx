@@ -4,6 +4,7 @@ import { postRecord } from "../api/zoho";
 
 const Customer = ({ handleClose, addNewCustomer }) => {
   const [form] = Form.useForm();
+
   const customerNameFieldRef = useRef(null);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ const Customer = ({ handleClose, addNewCustomer }) => {
       console.log(response);
       addNewCustomer({
         label: `${data.Phone_Number} - ${data.Customer_Name}`,
-        value: `${data.Phone_Number} - ${data.Customer_Name}`,
+        value: `${data.Phone_Number}`,
         id: response.ID,
       });
       handleClose();
@@ -32,12 +33,7 @@ const Customer = ({ handleClose, addNewCustomer }) => {
   };
   return (
     <div>
-      <Form
-        form={form}
-        onFinish={onSubmit}
-        layout="vertical"
-        initialValues={{ Status: "Pending", Quantity: 1 }}
-      >
+      <Form form={form} onFinish={onSubmit} layout="vertical">
         <Form.Item
           label="Customer Name"
           name="Customer_Name"
