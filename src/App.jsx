@@ -27,6 +27,7 @@ const App = () => {
   const [productSearch, setProductSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
+  const [salesExecutives, setSalesExecutives] = useState([]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -81,7 +82,7 @@ const App = () => {
           id: record.ID,
         }));
         setCustomers(customer_data);
-        const salesResp = await getRecords("All_Employees", "ID != 0");
+        const salesResp = await getRecords("All_Users", "ID != 0");
         const sales_data = salesResp.map((record) => ({
           label: record.Name.display_value,
           value: record.Name.display_value,
@@ -104,6 +105,16 @@ const App = () => {
             form.setFieldsValue({
               Sales_Person: user.Name.display_value,
               Branch: user.Branch.display_value,
+            });
+            const sales_executives = salesResp.filter(
+              (i) => i.Branch.ID === user.Branch.ID
+            );
+            setSalesExecutives(() => {
+              return sales_executives.map((record) => ({
+                label: record.Name.display_value,
+                value: record.Name.display_value,
+                id: record.ID,
+              }));
             });
           }
         }
@@ -235,6 +246,9 @@ const App = () => {
             rules={[{ required: true, message: "Please select a branch" }]}
           >
             <Select options={branches} />
+          </Form.Item>
+          <Form.Item name="Sales_Executive" label="Sales Executive">
+            <Select options={salesExecutives} allowClear showSearch />
           </Form.Item>
           <Form.Item
             layout="horizontal"
