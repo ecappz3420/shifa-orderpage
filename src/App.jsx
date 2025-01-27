@@ -29,6 +29,8 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [salesExecutives, setSalesExecutives] = useState([]);
+  const [typedNewCustomerValue, setTypedNewCustomerValue] = useState("");
+  const [modalResetTrigger, setModalResetTrigger] = useState(0);
 
   const addLineItemBtnRef = useRef(null);
   const customerNameFieldRef = useRef(null);
@@ -39,7 +41,7 @@ const App = () => {
     const formData = {
       ...data,
       Order_Date: dayjs().format("DD-MMM-YYYY"),
-      Customer: customers.find((i) => i.value === data.Customer)?.id || "",
+      Customer: data.Customer?.id, //kindly verify usage
       Branch: branches.find((i) => i.value === data.Branch)?.id || "",
       Sales_Person:
         salesPersons.find((i) => i.value === data.Sales_Person)?.id || "",
@@ -188,7 +190,15 @@ const App = () => {
   };
 
   const handleKeyDownOnForm = (event) => {
-    if (event.ctrlKey && event.shiftKey) {
+    if (
+      event.ctrlKey &&
+      event.shiftKey &&
+      document.activeElement.id !== "Customer" &&
+      !(
+        document.activeElement.id.includes("Items") &&
+        document.activeElement.id.includes("Product")
+      )
+    ) {
       addLineItemBtnRef?.current.click();
     } else if (event.key === "Enter" && event.ctrlKey) {
       form.submit();
@@ -197,8 +207,17 @@ const App = () => {
 
   const handleAddNewCustomer = (event) => {
     if (event.ctrlKey && event.shiftKey) {
+      setModalResetTrigger((prev) => prev + 1);
       setOpenCustomer(true);
     }
+  };
+
+  const handleSearch = (value) => {
+    // // Ensure the value is a number and limit it to 10 characters
+    // const numericValue = value.replace(/\D/g, ""); // Remove all non-digit characters
+    // const limitedValue = numericValue.slice(0, 10); // Limit to 10 digits
+
+    setTypedNewCustomerValue(value.length > 10 ? value.slice(0, 10) : value);
   };
 
   return (
@@ -220,6 +239,7 @@ const App = () => {
           >
             <Select
               options={customers}
+              onSearch={handleSearch}
               showSearch
               allowClear
               autoFocus
@@ -252,8 +272,10 @@ const App = () => {
             footer={<></>}
           >
             <Customer
+              modalResetTrigger={modalResetTrigger}
               handleClose={handleClose}
               addNewCustomer={addNewCustomer}
+              newCustomerPhoneNumber={typedNewCustomerValue}
             />
           </Modal>
 
