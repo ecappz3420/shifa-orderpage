@@ -2,17 +2,23 @@ import { Button, Form, Input, InputNumber } from "antd";
 import React, { useRef, useEffect } from "react";
 import { postRecord } from "../api/zoho";
 
-const Customer = ({ handleClose, addNewCustomer, newCustomerPhoneNumber }) => {
+const Customer = ({
+  modalResetTrigger,
+  handleClose,
+  addNewCustomer,
+  newCustomerPhoneNumber,
+}) => {
   const [form] = Form.useForm();
 
   const customerNameFieldRef = useRef(null);
 
   useEffect(() => {
-    // Focus the input after the component is mounted
+    // Perform actions every time the modal is opened
     if (customerNameFieldRef.current) {
-      customerNameFieldRef.current.focus();
+      setTimeout(() => customerNameFieldRef.current.focus(), 0);
     }
-  }, []);
+    form.setFieldValue("Phone_Number", Number(newCustomerPhoneNumber));
+  }, [modalResetTrigger]);
 
   const onSubmit = async (data) => {
     try {
@@ -27,6 +33,7 @@ const Customer = ({ handleClose, addNewCustomer, newCustomerPhoneNumber }) => {
         id: response.ID,
       });
       handleClose();
+      form.resetFields();
     } catch (error) {
       console.log(`Error Adding Record: ${error}`);
     }
@@ -56,8 +63,18 @@ const Customer = ({ handleClose, addNewCustomer, newCustomerPhoneNumber }) => {
             style={{ width: "100%" }}
           />
         </Form.Item>
-        <Form.Item label="Email" name="Email" className="w-[300px]">
-          <Input />
+        <Form.Item
+          label="Email"
+          name="Email"
+          className="w-[300px]"
+          rules={[
+            {
+              type: "email",
+              message: "Please input a valid email address!",
+            },
+          ]}
+        >
+          <Input type="email" />
         </Form.Item>
         <Form.Item label="Address" name="Address" className="w-[300px]">
           <Input.TextArea />
