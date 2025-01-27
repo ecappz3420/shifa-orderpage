@@ -2,7 +2,7 @@ import { Button, Form, Input, InputNumber } from "antd";
 import React, { useRef, useEffect } from "react";
 import { postRecord } from "../api/zoho";
 
-const Customer = ({ handleClose, addNewCustomer }) => {
+const Customer = ({ handleClose, addNewCustomer, newCustomerPhoneNumber }) => {
   const [form] = Form.useForm();
 
   const customerNameFieldRef = useRef(null);
@@ -47,6 +47,7 @@ const Customer = ({ handleClose, addNewCustomer }) => {
           name="Phone_Number"
           className="w-[300px]"
           rules={[{ required: true, message: "Please enter a phone number" }]}
+          initialValue={Number(newCustomerPhoneNumber)}
         >
           <InputNumber
             prefix="+91"
