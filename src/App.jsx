@@ -24,7 +24,6 @@ const App = () => {
   const [branches, setBranches] = useState([]);
   const [products, setProducts] = useState([]);
   const [openCustomer, setOpenCustomer] = useState(false);
-  const [statuses, setStatuses] = useState([]);
   const [productSearch, setProductSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
@@ -75,9 +74,10 @@ const App = () => {
     }
   };
 
-  const handleClose = () => {
+  const handleModalClose = () => {
     setOpenCustomer(false);
   };
+
   const addNewCustomer = (data) => {
     setCustomers((prev) => [...prev, data]);
     form.setFieldsValue({ Customer: data.value });
@@ -117,6 +117,13 @@ const App = () => {
             const fieldsValue = {
               Sales_Person: user.Name.display_value,
               Branch: user.Branch.display_value,
+              Items: [
+                {
+                  Product: undefined,
+                  Quantity: 1,
+                  Description: "",
+                },
+              ],
             };
             form.setFieldsValue(fieldsValue);
             setFormInitialValues(fieldsValue);
@@ -148,65 +155,152 @@ const App = () => {
     init();
   }, []);
 
-  const handleKeydown = async (event, fieldName) => {
-    if (event.ke && event.shiftKey && productSearch) {
-      const exists = products.some((opt) => opt.value === productSearch);
-      if (!exists) {
-        try {
-          const response = await postRecord("Product", {
-            data: {
-              Product_Name: productSearch,
-            },
-          });
-          const newProduct = {
-            label: productSearch,
-            value: productSearch,
-            id: response.ID,
-            key: response.ID,
-          };
-          setProducts((prev) => [...prev, newProduct]);
-
-          form.setFieldsValue({
-            Items: form
-              .getFieldValue("Items")
-              .map((item, index) =>
-                index === fieldName ? { ...item, Product: productSearch } : item
-              ),
-          });
-
-          console.log(response);
-        } catch (error) {
-          console.error("Error Adding Product:", error);
+  const handleAddNewCustomerOnKeyDown = (event) => {
+    if (event.key === "Enter") {
+      if (typedNewCustomerValue) {
+        if (typedNewCustomerValue !== "cleared") {
+          const exists = customers.some(
+            (opt) => opt.value === typedNewCustomerValue
+          );
+          if (!exists) {
+            setModalResetTrigger((prev) => prev + 1);
+            setOpenCustomer(true);
+          }
+        } else {
+          const targetForm = event.target.form; // Get the form element
+          const index = Array.prototype.indexOf.call(targetForm, event.target); // Get the current element's index
+          if (targetForm[index + 3]) {
+            targetForm[index + 3].focus(); // Focus the next element
+          }
         }
       }
     }
   };
 
-  const handleKeyDownOnForm = (event) => {
-    if (
-      event.ctrlKey &&
-      event.shiftKey &&
-      document.activeElement.id !== "Customer" &&
-      !(
-        document.activeElement.id.includes("Items") &&
-        document.activeElement.id.includes("Product")
-      )
-    ) {
+  const handleAddNewProductOnKeyDown = async (event, fieldName) => {
+    if (event.key === "Enter")
+      if (productSearch) {
+        if (productSearch !== "cleared") {
+          const exists = products.some((opt) => opt.value === productSearch);
+          if (!exists) {
+            try {
+              const response = await postRecord("Product", {
+                data: {
+                  Product_Name: productSearch,
+                },
+              });
+              const newProduct = {
+                label: productSearch,
+                value: productSearch,
+                id: response.ID,
+                key: response.ID,
+              };
+              setProducts((prev) => [...prev, newProduct]);
+
+              form.setFieldsValue({
+                Items: form
+                  .getFieldValue("Items")
+                  .map((item, index) =>
+                    index === fieldName
+                      ? { ...item, Product: productSearch }
+                      : item
+                  ),
+              });
+
+              console.log(response);
+            } catch (error) {
+              console.error("Error Adding Product:", error);
+            }
+          }
+        } else {
+          const targetForm = event.target.form; // Get the form element
+          const index = Array.prototype.indexOf.call(targetForm, event.target); // Get the current element's index
+          if (targetForm[index + 1]) {
+            targetForm[index + 1].focus(); // Focus the next element
+          }
+        }
+      }
+  };
+
+  const handleAddProductLineItemOnKeyDown = (e) => {
+    if (e.ctrlKey) {
+      const targetForm = e.target.form; // Get the form element
+      const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
       addLineItemBtnRef?.current.click();
-    } else if (event.key === "Enter" && event.ctrlKey) {
-      form.submit();
+      setTimeout(() => {
+        if (targetForm[index + 1]) {
+          targetForm[index + 1].focus(); // Focus the next element
+        }
+      }, 500);
     }
   };
 
-  const handleAddNewCustomer = (event) => {
-    if (event.ctrlKey && event.shiftKey) {
-      setModalResetTrigger((prev) => prev + 1);
-      setOpenCustomer(true);
+  const handleCustomerSearch = (value) => {
+    const filteredResults = customers.filter((customer) =>
+      customer.value.includes(value)
+    );
+
+    if (filteredResults.length === 0) {
+      setTypedNewCustomerValue(value.length > 10 ? value.slice(0, 10) : value);
+    } else {
+      setTypedNewCustomerValue("cleared");
     }
   };
 
-  const handleSearch = (value) => {
-    setTypedNewCustomerValue(value.length > 10 ? value.slice(0, 10) : value);
+  const handleProductSearch = (value) => {
+    const filteredResults = products.filter((product) =>
+      product.value.includes(value)
+    );
+
+    if (filteredResults.length === 0) {
+      setProductSearch(value);
+    } else {
+      setProductSearch("cleared");
+    }
+  };
+
+  const handleFormKeyDown = (e, name) => {
+    if (e.key === "Enter") {
+      const targetForm = e.target.form; // Get the form element
+      if (e.target.id === "Customer_Name") form.submit();
+      else if (e.target.id === "Customer") {
+        if (form.getFieldValue(e.target.id)) {
+          e.preventDefault(); // Prevent the default form submission
+          const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+          if (targetForm[index + 3]) {
+            targetForm[index + 3].focus(); // Focus the next element
+          }
+        }
+      } else if (e.target.id === "Sales_Executive") {
+        if (form.getFieldValue(e.target.id)) {
+          e.preventDefault(); // Prevent the default form submission
+          const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+          if (targetForm[index + 1]) {
+            targetForm[index + 1].focus(); // Focus the next element
+          }
+        }
+      } else if (e.target.id.includes("Product")) {
+        if (
+          form.getFieldValue("Items")[
+            Number(document.activeElement.id.split("_")[1])
+          ].Product
+        ) {
+          e.preventDefault(); // Prevent the default form submission
+          const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+          if (targetForm[index + 1]) {
+            targetForm[index + 1].focus(); // Focus the next element
+          }
+        }
+      } else {
+        e.preventDefault(); // Prevent the default form submission
+        const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+        if (targetForm[index + 1]) {
+          targetForm[index + 1].focus(); // Focus the next element
+        } else {
+          form.submit();
+        }
+      }
+    }
   };
 
   return (
@@ -215,7 +309,7 @@ const App = () => {
         onFinish={onSubmit}
         form={form}
         layout="vertical"
-        onKeyDown={handleKeyDownOnForm}
+        onKeyDown={handleFormKeyDown}
         initialValues={formInitialValues}
       >
         <div className="grid grid-cols-2 gap-5">
@@ -228,12 +322,12 @@ const App = () => {
           >
             <Select
               options={customers}
-              onSearch={handleSearch}
+              onSearch={handleCustomerSearch}
               showSearch
               allowClear
               autoFocus
               ref={customerNameFieldRef}
-              onKeyDown={handleAddNewCustomer}
+              onKeyDown={handleAddNewCustomerOnKeyDown}
               dropdownRender={(menu) => (
                 <>
                   {menu}
@@ -255,14 +349,14 @@ const App = () => {
           </Form.Item>
           <Modal
             open={openCustomer}
-            onCancel={handleClose}
-            onClose={handleClose}
-            onOk={handleClose}
+            onCancel={handleModalClose}
+            onClose={handleModalClose}
+            onOk={handleModalClose}
             footer={<></>}
           >
             <Customer
               modalResetTrigger={modalResetTrigger}
-              handleClose={handleClose}
+              handleModalClose={handleModalClose}
               addNewCustomer={addNewCustomer}
               newCustomerPhoneNumber={typedNewCustomerValue}
             />
@@ -313,7 +407,6 @@ const App = () => {
           <div className="w-[300px]">Product Name</div>
           <div className="w-[100px]">Quantity</div>
           <div className="w-[300px]">Description</div>
-          {/* <div className="w-[300px]">Status</div> */}
         </div>
         <Form.List name="Items">
           {(fields, { add, remove }) => (
@@ -331,8 +424,10 @@ const App = () => {
                       placeholder="Select Product"
                       allowClear
                       showSearch
-                      onKeyDown={(event) => handleKeydown(event, name)}
-                      onSearch={(value) => setProductSearch(value)}
+                      onKeyDown={(event) =>
+                        handleAddNewProductOnKeyDown(event, name)
+                      }
+                      onSearch={handleProductSearch}
                     />
                   </Form.Item>
 
@@ -356,19 +451,10 @@ const App = () => {
                   >
                     <Input.TextArea placeholder="Description" />
                   </Form.Item>
-                  {/* <Form.Item
-                    {...restField}
-                    name={[name, "Status"]}
-                    initialValue={"Pending"}
-                    rules={[{ required: true, message: "Status is required" }]}
-                    className="w-[200px]"
-                  >
-                    <Select options={statuses} allowClear showSearch />
-                  </Form.Item> */}
-
                   <Button
                     danger
                     type="text"
+                    onKeyDown={handleAddProductLineItemOnKeyDown}
                     onClick={() => remove(name)}
                     icon={<CloseOutlined />}
                   />

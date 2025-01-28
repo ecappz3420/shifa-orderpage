@@ -4,7 +4,7 @@ import { postRecord } from "../api/zoho";
 
 const Customer = ({
   modalResetTrigger,
-  handleClose,
+  handleModalClose,
   addNewCustomer,
   newCustomerPhoneNumber,
 }) => {
@@ -33,7 +33,7 @@ const Customer = ({
         id: response.ID,
         key: response.ID,
       });
-      handleClose();
+      handleModalClose();
       form.resetFields();
     } catch (error) {
       console.log(`Error Adding Record: ${error}`);
