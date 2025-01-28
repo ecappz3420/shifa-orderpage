@@ -41,7 +41,7 @@ const App = () => {
     const formData = {
       ...data,
       Order_Date: dayjs().format("DD-MMM-YYYY"),
-      Customer: data.Customer?.id, //kindly verify usage
+      Customer: customers.find((i) => i.value === data.Customer)?.id || "",
       Branch: branches.find((i) => i.value === data.Branch)?.id || "",
       Sales_Person:
         salesPersons.find((i) => i.value === data.Sales_Person)?.id || "",
@@ -52,7 +52,7 @@ const App = () => {
           Product: products.find((i) => i.value === item.Product)?.id || "",
           Quantity: item?.Quantity || 1,
           Description: item?.Description || "",
-          Status: statuses.find((i) => i.value === item.Status)?.id || "",
+          Status: "260850000000014040",
         })) || "",
     };
     const finalData = {
@@ -80,7 +80,7 @@ const App = () => {
   };
   const addNewCustomer = (data) => {
     setCustomers((prev) => [...prev, data]);
-    form.setFieldsValue({ Customer: data });
+    form.setFieldsValue({ Customer: data.value });
   };
 
   useEffect(() => {
@@ -92,6 +92,7 @@ const App = () => {
           label: record.Phone_Number + " - " + record.Customer_Name,
           value: record.Phone_Number,
           id: record.ID,
+          key: record.ID,
         }));
         setCustomers(customer_data);
         const salesResp = await getRecords("All_Users", "ID != 0");
@@ -107,7 +108,6 @@ const App = () => {
           value: record.Branch_Name,
           id: record.ID,
         }));
-        console.log(branch_data);
         setBranches(branch_data);
         const initparams = await ZOHO.CREATOR.UTIL.getInitParams();
         const { loginUser } = initparams;
@@ -141,13 +141,6 @@ const App = () => {
           key: record.ID,
         }));
         setProducts(product_data);
-        const statusResp = await getRecords("All_Statuses", "ID != 0");
-        const status_data = statusResp.map((record) => ({
-          label: record.Status_Name,
-          value: record.Status_Name,
-          id: record.ID,
-        }));
-        setStatuses(status_data);
       } catch (error) {
         console.log(error);
       }
@@ -156,7 +149,7 @@ const App = () => {
   }, []);
 
   const handleKeydown = async (event, fieldName) => {
-    if (event.ctrlKey && event.shiftKey && productSearch) {
+    if (event.ke && event.shiftKey && productSearch) {
       const exists = products.some((opt) => opt.value === productSearch);
       if (!exists) {
         try {
@@ -213,10 +206,6 @@ const App = () => {
   };
 
   const handleSearch = (value) => {
-    // // Ensure the value is a number and limit it to 10 characters
-    // const numericValue = value.replace(/\D/g, ""); // Remove all non-digit characters
-    // const limitedValue = numericValue.slice(0, 10); // Limit to 10 digits
-
     setTypedNewCustomerValue(value.length > 10 ? value.slice(0, 10) : value);
   };
 

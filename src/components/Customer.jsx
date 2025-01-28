@@ -31,6 +31,7 @@ const Customer = ({
         label: `${data.Phone_Number} - ${data.Customer_Name}`,
         value: `${data.Phone_Number}`,
         id: response.ID,
+        key: response.ID,
       });
       handleClose();
       form.resetFields();
@@ -57,7 +58,7 @@ const Customer = ({
           initialValue={Number(newCustomerPhoneNumber)}
         >
           <InputNumber
-            prefix="+91"
+            formatter={(value) => `+91${value}`}
             maxLength={10}
             className="w-[300px]"
             style={{ width: "100%" }}
