@@ -95,13 +95,7 @@ const App = () => {
           key: record.ID,
         }));
         setCustomers(customer_data);
-        const salesResp = await getRecords("All_Users", "ID != 0");
-        const sales_data = salesResp.map((record) => ({
-          label: record.Name.display_value,
-          value: record.Name.display_value,
-          id: record.ID,
-        }));
-        setSalesPersons(sales_data);
+
         const branchResp = await getRecords("All_Branches", "ID != 0");
         const branch_data = branchResp.map((record) => ({
           label: record.Branch_Name,
@@ -109,6 +103,15 @@ const App = () => {
           id: record.ID,
         }));
         setBranches(branch_data);
+
+        const salesResp = await getRecords("All_Users", "ID != 0");
+        const sales_data = salesResp.map((record) => ({
+          label: record.Name.display_value,
+          value: record.Name.display_value,
+          id: record.ID,
+        }));
+        setSalesPersons(sales_data);
+
         const initparams = await ZOHO.CREATOR.UTIL.getInitParams();
         const { loginUser } = initparams;
         if (salesResp.length > 0) {
@@ -140,6 +143,7 @@ const App = () => {
             });
           }
         }
+
         const productResp = await getRecords("All_Products", "ID != 0");
         const product_data = productResp.map((record) => ({
           label: record.Product_Name,
@@ -269,7 +273,7 @@ const App = () => {
         if (
           form.getFieldValue("Items")[
             Number(document.activeElement.id.split("_")[1])
-          ].Product
+          ]?.Product
         ) {
           e.preventDefault(); // Prevent the default form submission
           const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
@@ -364,23 +368,7 @@ const App = () => {
               autoFocus
               ref={customerNameFieldRef}
               onKeyDown={handleAddNewCustomerOnKeyDown}
-              dropdownRender={(menu) => (
-                <>
-                  {menu}
-                  {/* <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      padding: "4px",
-                      borderTop: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <Button type="link" onClick={() => setOpenCustomer(true)}>
-                      + Add New Customer
-                    </Button>
-                  </div> */}
-                </>
-              )}
+              dropdownRender={(menu) => <>{menu}</>}
             />
           </Form.Item>
           <Modal
@@ -430,6 +418,7 @@ const App = () => {
           >
             <Select options={salesExecutives} allowClear showSearch />
           </Form.Item>
+
           <Form.Item
             layout="horizontal"
             label="Home Delivery"
@@ -470,7 +459,6 @@ const App = () => {
                   <Form.Item
                     {...restField}
                     name={[name, "Quantity"]}
-                    initialValue={1}
                     rules={[
                       { required: true, message: "Quantity is required" },
                       { type: "number", min: 1, message: "Must be at least 1" },
@@ -501,7 +489,7 @@ const App = () => {
               <Button
                 hidden
                 type="dashed"
-                onClick={() => add()}
+                onClick={() => add({ Quantity: 1 })}
                 className="mt-3"
                 ref={addLineItemBtnRef}
               >
