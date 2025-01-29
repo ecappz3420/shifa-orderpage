@@ -1,48 +1,65 @@
 import { Button, Form, Input, InputNumber } from "antd";
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { postRecord } from "../api/zoho";
 
-const Customer = ({ handleClose, addNewCustomer }) => {
+const Customer = ({
+  modalResetTrigger,
+  handleModalClose,
+  addNewCustomer,
+  newCustomerPhoneNumber,
+}) => {
   const [form] = Form.useForm();
 
+  const customerNameFieldRef = useRef(null);
+
+  useEffect(() => {
+    // Perform actions every time the modal is opened
+    if (customerNameFieldRef.current) {
+      setTimeout(() => customerNameFieldRef.current.focus(), 0);
+    }
+    form.setFieldValue("Phone_Number", Number(newCustomerPhoneNumber));
+  }, [modalResetTrigger]);
+
   const onSubmit = async (data) => {
+    const formattedData = {
+      ...data,
+      Phone_Number: `+91${data.Phone_Number}`,
+    };
     try {
       const formData = {
-        data: data,
+        data: formattedData,
       };
       const response = await postRecord("Customer", formData);
       console.log(response);
       addNewCustomer({
-        label: `${data.Phone_Number} - ${data.Customer_Name}`,
-        value: `${data.Phone_Number} - ${data.Customer_Name}`,
+        label: `+91${data.Phone_Number} - ${data.Customer_Name}`,
+        value: `+91${data.Phone_Number}`,
         id: response.ID,
+        key: response.ID,
       });
-      handleClose();
+      handleModalClose();
+      form.resetFields();
     } catch (error) {
       console.log(`Error Adding Record: ${error}`);
     }
   };
   return (
     <div>
-      <Form
-        form={form}
-        onFinish={onSubmit}
-        layout="vertical"
-        initialValues={{ Status: "Pending", Quantity: 1 }}
-      >
+      <Form form={form} onFinish={onSubmit} layout="vertical">
         <Form.Item
           label="Customer Name"
           name="Customer_Name"
           className="w-[300px]"
           rules={[{ required: true, message: "Please enter a customer name" }]}
         >
-          <Input />
+          <Input ref={customerNameFieldRef} />
         </Form.Item>
         <Form.Item
           label="Phone"
           name="Phone_Number"
           className="w-[300px]"
           rules={[{ required: true, message: "Please enter a phone number" }]}
+          initialValue={Number(newCustomerPhoneNumber)}
         >
           <InputNumber
             prefix="+91"
@@ -51,8 +68,18 @@ const Customer = ({ handleClose, addNewCustomer }) => {
             style={{ width: "100%" }}
           />
         </Form.Item>
-        <Form.Item label="Email" name="Email" className="w-[300px]">
-          <Input />
+        <Form.Item
+          label="Email"
+          name="Email"
+          className="w-[300px]"
+          rules={[
+            {
+              type: "email",
+              message: "Please input a valid email address!",
+            },
+          ]}
+        >
+          <Input type="email" />
         </Form.Item>
         <Form.Item label="Address" name="Address" className="w-[300px]">
           <Input.TextArea />
