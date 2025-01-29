@@ -222,19 +222,6 @@ const App = () => {
       }
   };
 
-  const handleAddProductLineItemOnKeyDown = (e) => {
-    if (e.ctrlKey) {
-      const targetForm = e.target.form; // Get the form element
-      const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
-      addLineItemBtnRef?.current.click();
-      setTimeout(() => {
-        if (targetForm[index + 1]) {
-          targetForm[index + 1].focus(); // Focus the next element
-        }
-      }, 500);
-    }
-  };
-
   const handleCustomerSearch = (value) => {
     const filteredResults = customers.filter((customer) =>
       customer.value.includes(value)
@@ -259,11 +246,10 @@ const App = () => {
     }
   };
 
-  const handleFormKeyDown = (e, name) => {
+  const handleFormKeyDown = (e) => {
     if (e.key === "Enter") {
       const targetForm = e.target.form; // Get the form element
-      if (e.target.id === "Customer_Name") form.submit();
-      else if (e.target.id === "Customer") {
+      if (e.target.id === "Customer") {
         if (form.getFieldValue(e.target.id)) {
           e.preventDefault(); // Prevent the default form submission
           const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
@@ -291,15 +277,65 @@ const App = () => {
             targetForm[index + 1].focus(); // Focus the next element
           }
         }
+      } else if (e.target.id.includes("Description")) {
+        e.preventDefault(); // Prevent the default form submission
+        const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+        if (targetForm[index + 2].type === "button") {
+          targetForm[index + 3].focus(); // Focus the next element skipping the invisible delete and add line item buttons
+        } else {
+          targetForm[index + 2].focus(); // Focus the next Product element skipping the invisible delete button
+        }
       } else {
         e.preventDefault(); // Prevent the default form submission
         const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
         if (targetForm[index + 1]) {
           targetForm[index + 1].focus(); // Focus the next element
-        } else {
-          form.submit();
+        } else if (targetForm[index].type === "submit") {
+          e.preventDefault();
+          targetForm[index].click();
         }
       }
+    } else if (e.ctrlKey && e.shiftKey) {
+      handleAddProductLineItemOnKeyDown(e);
+    } else if (e.ctrlKey && e.key === "Delete") {
+      e.target.id.includes("Items") && handleDeleteProductLineItemOnKeyDown(e);
+    }
+  };
+
+  const handleAddProductLineItemOnKeyDown = (e) => {
+    addLineItemBtnRef?.current.click();
+    if (e.target.id.includes("Items")) {
+      const nextLineItemsIndex = Number(e.target.id.split("_")[1]) + 1;
+      setTimeout(() => {
+        document.getElementById(`Items_${nextLineItemsIndex}_Product`).focus(); // Focus the product name element of the added line item
+      }, 500);
+    }
+  };
+
+  const handleDeleteProductLineItemOnKeyDown = (e) => {
+    const targetForm = e.target.form; // Get the form element
+    const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+
+    const idParts = e.target.id.split("_");
+    const currentElement = idParts[2];
+
+    idParts[2] = "Remove"; // Change the last part
+    const removeBtnId = idParts.join("_");
+
+    //Remove line item
+    document.getElementById(removeBtnId).click();
+
+    //Focusing the previous item
+    switch (currentElement) {
+      case "Product":
+        targetForm[index - 2] && targetForm[index - 2].focus();
+        break;
+      case "Quantity":
+        targetForm[index - 3] && targetForm[index - 3].focus();
+        break;
+      case "Description":
+        targetForm[index - 4] && targetForm[index - 4].focus();
+        break;
     }
   };
 
@@ -427,7 +463,7 @@ const App = () => {
                       onKeyDown={(event) =>
                         handleAddNewProductOnKeyDown(event, name)
                       }
-                      onSearch={handleProductSearch}
+                      onSearch={(value) => handleProductSearch(value, name)}
                     />
                   </Form.Item>
 
@@ -452,9 +488,10 @@ const App = () => {
                     <Input.TextArea placeholder="Description" />
                   </Form.Item>
                   <Button
+                    id={"Items_" + name + "_Remove"}
+                    hidden
                     danger
                     type="text"
-                    onKeyDown={handleAddProductLineItemOnKeyDown}
                     onClick={() => remove(name)}
                     icon={<CloseOutlined />}
                   />
@@ -462,6 +499,7 @@ const App = () => {
               ))}
 
               <Button
+                hidden
                 type="dashed"
                 onClick={() => add()}
                 className="mt-3"

@@ -21,15 +21,19 @@ const Customer = ({
   }, [modalResetTrigger]);
 
   const onSubmit = async (data) => {
+    const formattedData = {
+      ...data,
+      Phone_Number: `+91${data.Phone_Number}`,
+    };
     try {
       const formData = {
-        data: data,
+        data: formattedData,
       };
       const response = await postRecord("Customer", formData);
       console.log(response);
       addNewCustomer({
-        label: `${data.Phone_Number} - ${data.Customer_Name}`,
-        value: `${data.Phone_Number}`,
+        label: `+91${data.Phone_Number} - ${data.Customer_Name}`,
+        value: `+91${data.Phone_Number}`,
         id: response.ID,
         key: response.ID,
       });
@@ -58,7 +62,7 @@ const Customer = ({
           initialValue={Number(newCustomerPhoneNumber)}
         >
           <InputNumber
-            formatter={(value) => `+91${value}`}
+            prefix="+91"
             maxLength={10}
             className="w-[300px]"
             style={{ width: "100%" }}
