@@ -85,7 +85,11 @@ const App = () => {
 
   useEffect(() => {
     const init = async () => {
-      form.setFieldsValue({ Home_Delivery: false });
+      form.setFieldsValue({
+        Home_Delivery: false,
+        Due_Products: false,
+        Confirm_with_Customers: false,
+      });
       try {
         const customerResp = await getRecords("All_Customers", "ID != 0");
         const customer_data = customerResp.map((record) => ({
@@ -213,10 +217,10 @@ const App = () => {
             }
           }
         } else {
-          const targetForm = event.target.form; // Get the form element
-          const index = Array.prototype.indexOf.call(targetForm, event.target); // Get the current element's index
+          const targetForm = event.target.form;
+          const index = Array.prototype.indexOf.call(targetForm, event.target);
           if (targetForm[index + 1]) {
-            targetForm[index + 1].focus(); // Focus the next element
+            targetForm[index + 1].focus();
           }
         }
       }
@@ -248,48 +252,51 @@ const App = () => {
 
   const handleFormKeyDown = (e) => {
     if (e.key === "Enter") {
-      const targetForm = e.target.form; // Get the form element
+      const targetForm = e.target.form;
       if (e.target.id === "Customer") {
         if (form.getFieldValue(e.target.id)) {
-          e.preventDefault(); // Prevent the default form submission
-          const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+          e.preventDefault();
+          const index = Array.prototype.indexOf.call(targetForm, e.target);
           if (targetForm[index + 3]) {
-            targetForm[index + 3].focus(); // Focus the next element
+            targetForm[index + 3].focus();
           }
         }
       } else if (e.target.id === "Sales_Executive") {
         if (form.getFieldValue(e.target.id)) {
-          e.preventDefault(); // Prevent the default form submission
-          const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+          e.preventDefault();
+          const index = Array.prototype.indexOf.call(targetForm, e.target);
           if (targetForm[index + 1]) {
-            targetForm[index + 1].focus(); // Focus the next element
+            targetForm[index + 1].focus();
           }
         }
-      } else if (e.target.id.includes("Product")) {
+      } else if (
+        e.target.id.startsWith("Items") &&
+        e.target.id.endsWith("Product")
+      ) {
         if (
           form.getFieldValue("Items")[
             Number(document.activeElement.id.split("_")[1])
-          ].Product
+          ]?.Product
         ) {
-          e.preventDefault(); // Prevent the default form submission
-          const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+          e.preventDefault();
+          const index = Array.prototype.indexOf.call(targetForm, e.target);
           if (targetForm[index + 1]) {
-            targetForm[index + 1].focus(); // Focus the next element
+            targetForm[index + 1].focus();
           }
         }
       } else if (e.target.id.includes("Description")) {
-        e.preventDefault(); // Prevent the default form submission
-        const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+        e.preventDefault();
+        const index = Array.prototype.indexOf.call(targetForm, e.target);
         if (targetForm[index + 2].type === "button") {
-          targetForm[index + 3].focus(); // Focus the next element skipping the invisible delete and add line item buttons
+          targetForm[index + 3].focus();
         } else {
-          targetForm[index + 2].focus(); // Focus the next Product element skipping the invisible delete button
+          targetForm[index + 2].focus();
         }
       } else {
-        e.preventDefault(); // Prevent the default form submission
-        const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+        e.preventDefault();
+        const index = Array.prototype.indexOf.call(targetForm, e.target);
         if (targetForm[index + 1]) {
-          targetForm[index + 1].focus(); // Focus the next element
+          targetForm[index + 1].focus();
         } else if (targetForm[index].type === "submit") {
           e.preventDefault();
           targetForm[index].click();
@@ -307,25 +314,23 @@ const App = () => {
     if (e.target.id.includes("Items")) {
       const nextLineItemsIndex = Number(e.target.id.split("_")[1]) + 1;
       setTimeout(() => {
-        document.getElementById(`Items_${nextLineItemsIndex}_Product`).focus(); // Focus the product name element of the added line item
+        document.getElementById(`Items_${nextLineItemsIndex}_Product`).focus();
       }, 500);
     }
   };
 
   const handleDeleteProductLineItemOnKeyDown = (e) => {
-    const targetForm = e.target.form; // Get the form element
-    const index = Array.prototype.indexOf.call(targetForm, e.target); // Get the current element's index
+    const targetForm = e.target.form;
+    const index = Array.prototype.indexOf.call(targetForm, e.target);
 
     const idParts = e.target.id.split("_");
     const currentElement = idParts[2];
 
-    idParts[2] = "Remove"; // Change the last part
+    idParts[2] = "Remove";
     const removeBtnId = idParts.join("_");
 
-    //Remove line item
     document.getElementById(removeBtnId).click();
 
-    //Focusing the previous item
     switch (currentElement) {
       case "Product":
         targetForm[index - 2] && targetForm[index - 2].focus();
@@ -347,6 +352,7 @@ const App = () => {
         layout="vertical"
         onKeyDown={handleFormKeyDown}
         initialValues={formInitialValues}
+        scrollToFirstError={true}
       >
         <div className="grid grid-cols-2 gap-5">
           {/* Customer Name */}
@@ -364,23 +370,7 @@ const App = () => {
               autoFocus
               ref={customerNameFieldRef}
               onKeyDown={handleAddNewCustomerOnKeyDown}
-              dropdownRender={(menu) => (
-                <>
-                  {menu}
-                  {/* <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      padding: "4px",
-                      borderTop: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <Button type="link" onClick={() => setOpenCustomer(true)}>
-                      + Add New Customer
-                    </Button>
-                  </div> */}
-                </>
-              )}
+              dropdownRender={(menu) => <>{menu}</>}
             />
           </Form.Item>
           <Modal
@@ -430,10 +420,28 @@ const App = () => {
           >
             <Select options={salesExecutives} allowClear showSearch />
           </Form.Item>
+        </div>
+        <div className="flex flex-col">
           <Form.Item
             layout="horizontal"
             label="Home Delivery"
             name="Home_Delivery"
+            valuePropName="checked"
+          >
+            <Checkbox />
+          </Form.Item>
+          <Form.Item
+            layout="horizontal"
+            label="Due Products"
+            name="Due_Products"
+            valuePropName="checked"
+          >
+            <Checkbox />
+          </Form.Item>
+          <Form.Item
+            layout="horizontal"
+            label="Confirm with Customers"
+            name="Confirm_with_Customers"
             valuePropName="checked"
           >
             <Checkbox />
@@ -466,11 +474,9 @@ const App = () => {
                       onSearch={(value) => handleProductSearch(value, name)}
                     />
                   </Form.Item>
-
                   <Form.Item
                     {...restField}
                     name={[name, "Quantity"]}
-                    initialValue={1}
                     rules={[
                       { required: true, message: "Quantity is required" },
                       { type: "number", min: 1, message: "Must be at least 1" },
@@ -479,7 +485,6 @@ const App = () => {
                   >
                     <InputNumber min={1} placeholder="Quantity" />
                   </Form.Item>
-
                   <Form.Item
                     {...restField}
                     name={[name, "Description"]}
@@ -487,9 +492,9 @@ const App = () => {
                   >
                     <Input.TextArea placeholder="Description" />
                   </Form.Item>
+
                   <Button
                     id={"Items_" + name + "_Remove"}
-                    hidden
                     danger
                     type="text"
                     onClick={() => remove(name)}
@@ -501,7 +506,7 @@ const App = () => {
               <Button
                 hidden
                 type="dashed"
-                onClick={() => add()}
+                onClick={() => add({ Quantity: 1 })}
                 className="mt-3"
                 ref={addLineItemBtnRef}
               >
