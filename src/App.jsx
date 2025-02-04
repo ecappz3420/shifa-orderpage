@@ -302,9 +302,12 @@ const App = () => {
           targetForm[index].click();
         }
       }
-    } else if (e.ctrlKey && e.shiftKey) {
+    } else if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
       handleAddProductLineItemOnKeyDown(e);
-    } else if (e.ctrlKey && e.key === "Delete") {
+    } else if (
+      (e.ctrlKey || e.metaKey) &&
+      (e.key === "Backspace" || (e.key === "Delete" && e.fnKey))
+    ) {
       e.target.id.includes("Items") && handleDeleteProductLineItemOnKeyDown(e);
     }
   };
