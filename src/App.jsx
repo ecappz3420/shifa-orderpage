@@ -20,8 +20,8 @@ const App = () => {
   const [form] = Form.useForm();
   const [formInitialValues, setFormInitialValues] = useState({});
   const [customers, setCustomers] = useState([]);
-  const [salesPersons, setSalesPersons] = useState([]);
-  const [branches, setBranches] = useState([]);
+  const [branch, setBranch] = useState("");
+  const [salesPerson, setSalesPerson] = useState("");
   const [products, setProducts] = useState([]);
   const [openCustomer, setOpenCustomer] = useState(false);
   const [productSearch, setProductSearch] = useState("");
@@ -41,9 +41,8 @@ const App = () => {
       ...data,
       Order_Date: dayjs().format("DD-MMM-YYYY"),
       Customer: customers.find((i) => i.value === data.Customer)?.id || "",
-      Branch: branches.find((i) => i.value === data.Branch)?.id || "",
-      Sales_Person:
-        salesPersons.find((i) => i.value === data.Sales_Person)?.id || "",
+      Branch: branch,
+      Sales_Person: salesPerson,
       Sales_Executive:
         salesExecutives.find((i) => i.value === data.Sales_Executive)?.id || "",
       Items:
@@ -99,50 +98,42 @@ const App = () => {
           key: record.ID,
         }));
         setCustomers(customer_data);
-        const salesResp = await getRecords("All_Users", "ID != 0");
-        const sales_data = salesResp.map((record) => ({
-          label: record.Name.display_value,
-          value: record.Name.display_value,
-          id: record.ID,
-        }));
-        setSalesPersons(sales_data);
-        const branchResp = await getRecords("All_Branches", "ID != 0");
-        const branch_data = branchResp.map((record) => ({
-          label: record.Branch_Name,
-          value: record.Branch_Name,
-          id: record.ID,
-        }));
-        setBranches(branch_data);
+
         const initparams = await ZOHO.CREATOR.UTIL.getInitParams();
         const { loginUser } = initparams;
-        if (salesResp.length > 0) {
-          const user = salesResp.find((i) => i.Email === loginUser);
-          if (user) {
-            const fieldsValue = {
-              Sales_Person: user.Name.display_value,
-              Branch: user.Branch.display_value,
-              Items: [
-                {
-                  Product: undefined,
-                  Quantity: 1,
-                  Description: "",
-                },
-              ],
-            };
-            form.setFieldsValue(fieldsValue);
-            setFormInitialValues(fieldsValue);
+        const userObj = await getRecords(
+          "All_Users",
+          `Email == "${loginUser}"`
+        );
+        const user = userObj[0];
+        setBranch(user.Branch.ID);
+        setSalesPerson(user.ID);
+        if (user) {
+          const fieldsValue = {
+            Sales_Person: user.Name.display_value,
+            Branch: user.Branch.display_value,
+            Items: [
+              {
+                Product: undefined,
+                Quantity: null,
+                Description: "",
+              },
+            ],
+          };
+          form.setFieldsValue(fieldsValue);
+          setFormInitialValues(fieldsValue);
 
-            const sales_executives = salesResp.filter(
-              (i) => i.Branch.ID === user.Branch.ID
-            );
-            setSalesExecutives(() => {
-              return sales_executives.map((record) => ({
-                label: record.Name.display_value,
-                value: record.Name.display_value,
-                id: record.ID,
-              }));
-            });
-          }
+          const sales_executives = await getRecords(
+            "Sales_Executive_Report",
+            `Branch == "${user.Branch.ID}"`
+          );
+          setSalesExecutives(() => {
+            return sales_executives.map((record) => ({
+              label: record.Name,
+              value: record.Name,
+              id: record.ID,
+            }));
+          });
         }
         const productResp = await getRecords("All_Products", "ID != 0");
         const product_data = productResp.map((record) => ({
@@ -392,28 +383,6 @@ const App = () => {
               newCustomerPhoneNumber={typedNewCustomerValue}
             />
           </Modal>
-
-          {/* Branch */}
-          <Form.Item
-            className="w-[300px]"
-            label="Branch"
-            name="Branch"
-            rules={[{ required: true, message: "Please select a branch" }]}
-          >
-            <Select options={branches} disabled />
-          </Form.Item>
-
-          {/* Sales Person */}
-          <Form.Item
-            className="w-[300px]"
-            label="Sales Person"
-            name="Sales_Person"
-            rules={[
-              { required: true, message: "Please select a sales person" },
-            ]}
-          >
-            <Select options={salesPersons} showSearch allowClear disabled />
-          </Form.Item>
 
           <Form.Item
             className="w-[300px]"
