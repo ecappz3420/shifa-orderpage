@@ -125,7 +125,7 @@ const App = () => {
 
           const sales_executives = await getRecords(
             "Sales_Executive_Report",
-            `Branch == "${user.Branch.ID}"`
+            `Branch == ${user.Branch.ID}`
           );
           setSalesExecutives(() => {
             return sales_executives.map((record) => ({
